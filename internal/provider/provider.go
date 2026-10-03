@@ -2,7 +2,10 @@ package provider
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 
@@ -31,6 +34,10 @@ type KeaProviderClientModel struct {
 	Address      types.String `tfsdk:"address"`
 	HTTPUsername types.String `tfsdk:"http_username"`
 	HTTPPassword types.String `tfsdk:"http_password"`
+	TLSCAFile         types.String `tfsdk:"tls_ca_file"`
+	TLSClientCertFile types.String `tfsdk:"tls_client_cert_file"`
+	TLSClientKeyFile  types.String `tfsdk:"tls_client_key_file"`
+	TLSServerName     types.String `tfsdk:"tls_server_name"`
 }
 
 func New(version string) func() provider.Provider {
@@ -69,6 +76,26 @@ func (p *KeaProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 						Optional:    true,
 						Sensitive:   true,
 						Description: "Password for HTTP basic authentication. Falls back to `KEA_DHCP4_HTTP_PASSWORD` environment variable.",
+					},
+					"tls_ca_file": schema.StringAttribute{
+						Optional: true,
+						Description: "PEM CA bundle used to verify the Kea HTTPS server. Falls back to `KEA_DHCP4_TLS_CA_FILE` environment variable.",
+					},
+
+					"tls_client_cert_file": schema.StringAttribute{
+						Optional: true,
+						Description: "PEM client certificate used for mutual TLS authentication. Falls back to `KEA_DHCP4_TLS_CLIENT_CERT_FILE` environment variable.",
+					},
+
+					"tls_client_key_file": schema.StringAttribute{
+						Optional: true,
+						Sensitive: true,
+						Description: "PEM private key corresponding to tls_client_cert_file. Falls back to `KEA_DHCP4_TLS_CLIENT_KEY_FILE` environment variable.",
+					},
+
+					"tls_server_name": schema.StringAttribute{
+						Optional: true,
+						Description: "TLS server name used for certificate verification and SNI. Falls back to `KEA_DHCP4_TLS_SERVER_NAME` environment variable.",
 					},
 				},
 			},
@@ -120,34 +147,40 @@ func (p *KeaProvider) DataSources(_ context.Context) []func() datasource.DataSou
 	}
 }
 
-func configureDHCP4Client(data *KeaProviderClientModel) (*keadhcp4.Client, error) {
-	var address string
-	if data != nil && !data.Address.IsNull() && !data.Address.IsUnknown() {
-		address = data.Address.ValueString()
-	} else if s, ok := os.LookupEnv("KEA_DHCP4_ADDRESS"); ok {
-		address = s
+// configValue returns the configured attribute, falling back to the environment variable.
+func configValue(data *KeaProviderClientModel, get func(*KeaProviderClientModel) types.String, env string) string {
+	if data != nil {
+		if v := get(data); !v.IsNull() && !v.IsUnknown() {
+			return v.ValueString()
+		}
 	}
+	return os.Getenv(env)
+}
+
+func configureDHCP4Client(data *KeaProviderClientModel) (*keadhcp4.Client, error) {
+	address := configValue(data, func(m *KeaProviderClientModel) types.String { return m.Address }, "KEA_DHCP4_ADDRESS")
 
 	// No address configured - skip DHCP4 client setup
 	if address == "" {
 		return nil, nil
 	}
 
-	var http_username string
-	if data != nil && !data.HTTPUsername.IsNull() && !data.HTTPUsername.IsUnknown() {
-		http_username = data.HTTPUsername.ValueString()
-	} else if s, ok := os.LookupEnv("KEA_DHCP4_HTTP_USERNAME"); ok {
-		http_username = s
-	}
+	http_username := configValue(data, func(m *KeaProviderClientModel) types.String { return m.HTTPUsername }, "KEA_DHCP4_HTTP_USERNAME")
+	http_password := configValue(data, func(m *KeaProviderClientModel) types.String { return m.HTTPPassword }, "KEA_DHCP4_HTTP_PASSWORD")
+	tls_ca_file := configValue(data, func(m *KeaProviderClientModel) types.String { return m.TLSCAFile }, "KEA_DHCP4_TLS_CA_FILE")
+	tls_client_cert_file := configValue(data, func(m *KeaProviderClientModel) types.String { return m.TLSClientCertFile }, "KEA_DHCP4_TLS_CLIENT_CERT_FILE")
+	tls_client_key_file := configValue(data, func(m *KeaProviderClientModel) types.String { return m.TLSClientKeyFile }, "KEA_DHCP4_TLS_CLIENT_KEY_FILE")
+	tls_server_name := configValue(data, func(m *KeaProviderClientModel) types.String { return m.TLSServerName }, "KEA_DHCP4_TLS_SERVER_NAME")
 
-	var http_password string
-	if data != nil && !data.HTTPPassword.IsNull() && !data.HTTPPassword.IsUnknown() {
-		http_password = data.HTTPPassword.ValueString()
-	} else if s, ok := os.LookupEnv("KEA_DHCP4_HTTP_PASSWORD"); ok {
-		http_password = s
-	}
-
-	transport, err := newKeaTransport(address, http_username, http_password)
+	transport, err := newKeaTransport(
+		address,
+		http_username,
+		http_password,
+		tls_ca_file,
+		tls_client_cert_file,
+		tls_client_key_file,
+		tls_server_name,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +189,69 @@ func configureDHCP4Client(data *KeaProviderClientModel) (*keadhcp4.Client, error
 	return client, nil
 }
 
-func newKeaTransport(uri, http_username, http_password string) (kea.Transport, error) {
+func newTLSHTTPClient(
+	caFile string,
+	clientCertFile string,
+	clientKeyFile string,
+	serverName string,
+) (*http.Client, error) {
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		ServerName: serverName,
+	}
+
+	if caFile != "" {
+		caPEM, err := os.ReadFile(caFile)
+		if err != nil {
+			return nil, fmt.Errorf("read TLS CA file: %w", err)
+		}
+
+		roots := x509.NewCertPool()
+		if !roots.AppendCertsFromPEM(caPEM) {
+			return nil, fmt.Errorf("TLS CA file contains no valid certificates")
+		}
+
+		tlsConfig.RootCAs = roots
+	}
+
+	switch {
+	case clientCertFile != "" && clientKeyFile == "":
+		return nil, fmt.Errorf("tls_client_key_file is required with tls_client_cert_file")
+
+	case clientCertFile == "" && clientKeyFile != "":
+		return nil, fmt.Errorf("tls_client_cert_file is required with tls_client_key_file")
+
+	case clientCertFile != "" && clientKeyFile != "":
+		cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("load TLS client certificate: %w", err)
+		}
+
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	baseTransport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil, fmt.Errorf("unexpected default HTTP transport type")
+	}
+
+	transport := baseTransport.Clone()
+	transport.TLSClientConfig = tlsConfig
+
+	return &http.Client{
+		Transport: transport,
+	}, nil
+}
+
+func newKeaTransport(
+	uri string,
+	httpUsername string,
+	httpPassword string,
+	caFile string,
+	clientCertFile string,
+	clientKeyFile string,
+	serverName string,
+) (kea.Transport, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
@@ -164,13 +259,35 @@ func newKeaTransport(uri, http_username, http_password string) (kea.Transport, e
 
 	switch u.Scheme {
 	case "unix":
-		return &kea.UnixTransport{SocketPath: u.Path}, nil
-	case "http", "https":
+		return &kea.UnixTransport{
+			SocketPath: u.Path,
+		}, nil
+
+	case "http":
 		return &kea.HTTPTransport{
 			Endpoint: uri,
-			Username: http_username,
-			Password: http_password,
+			Username: httpUsername,
+			Password: httpPassword,
 		}, nil
+
+	case "https":
+		client, err := newTLSHTTPClient(
+			caFile,
+			clientCertFile,
+			clientKeyFile,
+			serverName,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return &kea.HTTPTransport{
+			Endpoint: uri,
+			Client:   client,
+			Username: httpUsername,
+			Password: httpPassword,
+		}, nil
+
 	default:
 		return nil, fmt.Errorf("unsupported scheme: %s", u.Scheme)
 	}

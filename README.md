@@ -102,6 +102,53 @@ export KEA_DHCP4_HTTP_PASSWORD="secret" # optional
 provider "kea" {}
 ```
 
+### HTTPS and mutual TLS
+
+For `https://` addresses, the TLS options below are available. Each falls back to an environment variable.
+
+| Attribute              | Environment variable              |
+| ---------------------- | --------------------------------- |
+| `tls_ca_file`          | `KEA_DHCP4_TLS_CA_FILE`           |
+| `tls_client_cert_file` | `KEA_DHCP4_TLS_CLIENT_CERT_FILE`  |
+| `tls_client_key_file`  | `KEA_DHCP4_TLS_CLIENT_KEY_FILE`   |
+| `tls_server_name`      | `KEA_DHCP4_TLS_SERVER_NAME`       |
+
+`tls_client_cert_file` and `tls_client_key_file` must be set together.
+
+### Passing values via tfvars
+
+Declare variables and reference them in the provider block:
+
+```terraform
+variable "kea_address"         { type = string }
+variable "kea_tls_ca_file"     { type = string }
+variable "kea_tls_client_cert" { type = string }
+variable "kea_tls_client_key"  { type = string }
+variable "kea_tls_server_name" { type = string }
+
+provider "kea" {
+  dhcp4 = {
+    address              = var.kea_address
+    tls_ca_file          = var.kea_tls_ca_file
+    tls_client_cert_file = var.kea_tls_client_cert
+    tls_client_key_file  = var.kea_tls_client_key
+    tls_server_name      = var.kea_tls_server_name
+  }
+}
+```
+
+Set them in `terraform.tfvars` or `*.auto.tfvars` (a file named `.auto.tfvar` is NOT loaded automatically):
+
+```hcl
+kea_address         = "https://172.22.0.1:8000"
+kea_tls_ca_file     = "./issuer-ca.crt"
+kea_tls_client_cert = "./docker.chain.crt"
+kea_tls_client_key  = "./docker.key"
+kea_tls_server_name = "edge01.home.arpa"
+```
+
+Or use `TF_VAR_kea_tls_client_key=...` environment variables.
+
 Create a DHCP reservation:
 
 ```terraform
