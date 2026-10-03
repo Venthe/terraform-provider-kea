@@ -31,9 +31,9 @@ type KeaProviderModel struct {
 }
 
 type KeaProviderClientModel struct {
-	Address      types.String `tfsdk:"address"`
-	HTTPUsername types.String `tfsdk:"http_username"`
-	HTTPPassword types.String `tfsdk:"http_password"`
+	Address           types.String `tfsdk:"address"`
+	HTTPUsername      types.String `tfsdk:"http_username"`
+	HTTPPassword      types.String `tfsdk:"http_password"`
 	TLSCAFile         types.String `tfsdk:"tls_ca_file"`
 	TLSClientCertFile types.String `tfsdk:"tls_client_cert_file"`
 	TLSClientKeyFile  types.String `tfsdk:"tls_client_key_file"`
@@ -78,23 +78,23 @@ func (p *KeaProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 						Description: "Password for HTTP basic authentication. Falls back to `KEA_DHCP4_HTTP_PASSWORD` environment variable.",
 					},
 					"tls_ca_file": schema.StringAttribute{
-						Optional: true,
+						Optional:    true,
 						Description: "PEM CA bundle used to verify the Kea HTTPS server. Falls back to `KEA_DHCP4_TLS_CA_FILE` environment variable.",
 					},
 
 					"tls_client_cert_file": schema.StringAttribute{
-						Optional: true,
+						Optional:    true,
 						Description: "PEM client certificate used for mutual TLS authentication. Falls back to `KEA_DHCP4_TLS_CLIENT_CERT_FILE` environment variable.",
 					},
 
 					"tls_client_key_file": schema.StringAttribute{
-						Optional: true,
-						Sensitive: true,
+						Optional:    true,
+						Sensitive:   true,
 						Description: "PEM private key corresponding to tls_client_cert_file. Falls back to `KEA_DHCP4_TLS_CLIENT_KEY_FILE` environment variable.",
 					},
 
 					"tls_server_name": schema.StringAttribute{
-						Optional: true,
+						Optional:    true,
 						Description: "TLS server name used for certificate verification and SNI. Falls back to `KEA_DHCP4_TLS_SERVER_NAME` environment variable.",
 					},
 				},

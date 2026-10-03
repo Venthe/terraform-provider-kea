@@ -38,6 +38,28 @@ func TestAccReservation_basic(t *testing.T) {
 	})
 }
 
+func TestAccReservation_import(t *testing.T) {
+	mac := "02:A3:7B:4E:91:23"
+	ip := "10.67.0.43"
+	resourceName := "kea_dhcp4_reservation.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReservationConfig_basic(1, mac, ip),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("1/hw-address/%s", mac),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccReservation_withClientID(t *testing.T) {
 	clientID := "01:aa:bb:cc"
 	ip := "10.67.0.74"

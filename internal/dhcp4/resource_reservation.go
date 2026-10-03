@@ -2,7 +2,10 @@ package dhcp4
 
 import (
 	"context"
+	"fmt"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-nettypes/hwtypes"
@@ -24,6 +27,7 @@ import (
 
 var _ resource.ResourceWithConfigure = (*ReservationResource)(nil)
 var _ resource.ResourceWithConfigValidators = (*ReservationResource)(nil)
+var _ resource.ResourceWithImportState = (*ReservationResource)(nil)
 
 type ReservationResource struct {
 	client *keadhcp4.Client
@@ -203,6 +207,42 @@ func (r *ReservationResource) Configure(ctx context.Context, req resource.Config
 	}
 
 	r.client = keaClients.DHCP4
+}
+
+// ImportState expects `{subnet_id}/{identifier_type}/{identifier}`, e.g. `1/hw-address/aa:bb:cc:dd:ee:01`.
+func (r *ReservationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	parts := strings.SplitN(req.ID, "/", 3)
+	if len(parts) != 3 || parts[2] == "" {
+		resp.Diagnostics.AddError("Invalid Import ID",
+			fmt.Sprintf("Expected {subnet_id}/{identifier_type}/{identifier}, got %q", req.ID))
+		return
+	}
+
+	subnetID, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil || subnetID < 0 || subnetID > math.MaxUint32 {
+		resp.Diagnostics.AddError("Invalid Import ID",
+			fmt.Sprintf("subnet_id must be an integer between 0 and %d, got %q", uint32(math.MaxUint32), parts[0]))
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("subnet_id"), subnetID)...)
+
+	switch parts[1] {
+	case "hw-address":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("hw_address"), hwtypes.NewMACAddressValue(parts[2]))...)
+	case "client-id":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("client_id"), keatypes.NewHexIDValue(parts[2]))...)
+	case "circuit-id":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("circuit_id"), keatypes.NewHexIDValue(parts[2]))...)
+	case "duid":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("duid"), keatypes.NewHexIDValue(parts[2]))...)
+	case "flex-id":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("flex_id"), keatypes.NewHexIDValue(parts[2]))...)
+	default:
+		resp.Diagnostics.AddError("Invalid Import ID",
+			fmt.Sprintf("Unsupported identifier type %q; use hw-address, client-id, circuit-id, duid or flex-id", parts[1]))
+	}
 }
 
 func (r *ReservationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -64,9 +64,9 @@ func TestNewTLSHTTPClient(t *testing.T) {
 	}
 
 	tests := []struct {
-		name                 string
-		ca, cert, key, sni   string
-		wantErr              string
+		name               string
+		ca, cert, key, sni string
+		wantErr            string
 	}{
 		{name: "none"},
 		{name: "ca only", ca: cert},
