@@ -9,10 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/wfdewith/terraform-provider-kea/internal/acctest"
-	"github.com/wfdewith/terraform-provider-kea/kea"
-	"github.com/wfdewith/terraform-provider-kea/kea/keadhcp4"
-	"github.com/wfdewith/terraform-provider-kea/kea/keaquery"
+	"github.com/venthe/terraform-provider-kea/internal/acctest"
+	"github.com/venthe/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea/keadhcp4"
+	"github.com/venthe/terraform-provider-kea/kea/keaquery"
 )
 
 func TestAccReservation_basic(t *testing.T) {

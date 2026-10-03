@@ -16,10 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/wfdewith/terraform-provider-kea/internal/clients"
-	"github.com/wfdewith/terraform-provider-kea/internal/errors"
-	"github.com/wfdewith/terraform-provider-kea/internal/keatypes"
-	"github.com/wfdewith/terraform-provider-kea/kea/keadhcp4"
+	"github.com/venthe/terraform-provider-kea/internal/clients"
+	"github.com/venthe/terraform-provider-kea/internal/errors"
+	"github.com/venthe/terraform-provider-kea/internal/keatypes"
+	"github.com/venthe/terraform-provider-kea/kea/keadhcp4"
 )
 
 var _ resource.ResourceWithConfigure = (*ReservationResource)(nil)

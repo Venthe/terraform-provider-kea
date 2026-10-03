@@ -16,10 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/wfdewith/terraform-provider-kea/internal/clients"
-	"github.com/wfdewith/terraform-provider-kea/internal/dhcp4"
-	"github.com/wfdewith/terraform-provider-kea/kea"
-	"github.com/wfdewith/terraform-provider-kea/kea/keadhcp4"
+	"github.com/venthe/terraform-provider-kea/internal/clients"
+	"github.com/venthe/terraform-provider-kea/internal/dhcp4"
+	"github.com/venthe/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea/keadhcp4"
 )
 
 type KeaProvider struct {

@@ -3,7 +3,7 @@ package keadhcp4
 import (
 	"context"
 
-	"github.com/wfdewith/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea"
 )
 
 func (c *Client) GetSubnets(ctx context.Context) ([]Subnet, error) {

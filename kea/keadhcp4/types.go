@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/netip"
 
-	"github.com/wfdewith/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea"
 )
 
 type Subnet struct {

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/wfdewith/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea"
 )
 
 var (

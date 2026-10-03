@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	"github.com/wfdewith/terraform-provider-kea/internal/provider"
+	"github.com/venthe/terraform-provider-kea/internal/provider"
 )
 
 // ProtoV6ProviderFactories is used to instantiate a provider during

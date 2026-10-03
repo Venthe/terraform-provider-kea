@@ -43,7 +43,7 @@ control socket and hook library configuration.
 terraform {
   required_providers {
     kea = {
-      source = "wfdewith/kea"
+      source = "venthe/kea"
     }
   }
 }
@@ -52,7 +52,7 @@ terraform {
 ### Building from Source
 
 ```sh
-git clone https://github.com/wfdewith/terraform-provider-kea.git
+git clone https://github.com/venthe/terraform-provider-kea.git
 cd terraform-provider-kea
 make build
 ```
@@ -62,7 +62,7 @@ To use a locally built provider, add a dev override to your `~/.terraformrc`:
 ```hcl
 provider_installation {
   dev_overrides {
-    "wfdewith/kea" = "/path/to/terraform-provider-kea"
+    "venthe/kea" = "/path/to/terraform-provider-kea"
   }
   direct {}
 }

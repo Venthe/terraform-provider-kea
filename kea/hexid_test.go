@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/wfdewith/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea"
 )
 
 func TestParseHexID(t *testing.T) {

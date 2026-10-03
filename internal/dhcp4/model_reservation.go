@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-nettypes/iptypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/wfdewith/terraform-provider-kea/internal/keatypes"
-	"github.com/wfdewith/terraform-provider-kea/kea"
-	"github.com/wfdewith/terraform-provider-kea/kea/keadhcp4"
-	"github.com/wfdewith/terraform-provider-kea/kea/keaquery"
+	"github.com/venthe/terraform-provider-kea/internal/keatypes"
+	"github.com/venthe/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea/keadhcp4"
+	"github.com/venthe/terraform-provider-kea/kea/keaquery"
 )
 
 type ReservationModel struct {

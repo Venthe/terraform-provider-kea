@@ -3,8 +3,8 @@ package keadhcp4
 import (
 	"context"
 
-	"github.com/wfdewith/terraform-provider-kea/kea"
-	"github.com/wfdewith/terraform-provider-kea/kea/keaquery"
+	"github.com/venthe/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea/keaquery"
 )
 
 func (c *Client) GetReservations(ctx context.Context, subnetID uint32) ([]Reservation, error) {

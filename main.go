@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	"github.com/wfdewith/terraform-provider-kea/internal/provider"
+	"github.com/venthe/terraform-provider-kea/internal/provider"
 )
 
 // version indicates provider's version. The appropriate value
@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/wfdewith/kea",
+		Address: "registry.terraform.io/venthe/kea",
 		Debug:   debug,
 	}
 

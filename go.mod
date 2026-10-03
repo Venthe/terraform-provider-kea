@@ -1,4 +1,4 @@
-module github.com/wfdewith/terraform-provider-kea
+module github.com/venthe/terraform-provider-kea
 
 go 1.25.0
 

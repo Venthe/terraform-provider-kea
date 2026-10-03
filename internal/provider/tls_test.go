@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/wfdewith/terraform-provider-kea/kea"
+	"github.com/venthe/terraform-provider-kea/kea"
 )
 
 // writeTestPKI writes a self-signed CA/cert pair and returns the cert and key paths.

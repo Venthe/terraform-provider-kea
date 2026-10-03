@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/wfdewith/terraform-provider-kea/internal/acctest"
+	"github.com/venthe/terraform-provider-kea/internal/acctest"
 )
 
 func TestProvider(t *testing.T) {
